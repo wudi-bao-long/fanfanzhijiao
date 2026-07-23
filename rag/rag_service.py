@@ -23,13 +23,13 @@ print_runnable = RunnableLambda(print_prompt)
 
 class RagSummarizeService(object):
     def __init__(self):
-        self.vector_store = VectorStoreService()        # 向量存储
-        self.retriever = self.vector_store.get_retriever()           # 检索器
-        self.prompt_text = load_rag_prompts()     # 提示词数据
-        self.prompt_template = PromptTemplate.from_template(self.prompt_text)        # 提示词文本本身
-        self.model = chat_model               # 要用到的模型
-        self.chain = self.__init__chain()               # 当前RAG执行的链
-
+        self.vector_store = VectorStoreService()
+        self.vector_store.load_document()  #加这一行：启动时自动把data里的文件入库
+        self.retriever = self.vector_store.get_retriever()
+        self.prompt_text = load_rag_prompts()
+        self.prompt_template = PromptTemplate.from_template(self.prompt_text)
+        self.model = chat_model
+        self.chain = self.__init__chain()
     def __init__chain(self):
         chain = self.prompt_template | print_runnable | self.model | StrOutputParser()
         return chain
