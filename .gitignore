@@ -6,3 +6,6 @@ __pycache__/
 chroma_db/
 logs/
 .streamlit/secrets.toml
+*.tmp.*
+md5.text
+data/external/
