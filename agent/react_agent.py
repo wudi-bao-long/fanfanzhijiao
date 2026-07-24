@@ -3,6 +3,7 @@ from model.factory import chat_model
 from utils.prompt_loader import load_system_prompts
 from agent.tools.agent_tools import rag_summarize, random_food
 from agent.tools.middleware import monitor_tool, log_before_model
+from langchain_core.messages import AIMessage
 
 
 class ReactAgent:
@@ -25,8 +26,10 @@ class ReactAgent:
 
         for chunk in self.agent.stream(input_dict, stream_mode="values"):
             latest_message = chunk["messages"][-1]
-            if latest_message.content:
-                yield latest_message.content.strip() + "\n"
+            # 只输出最终回复（AIMessage且没有tool_calls），过滤掉思考过程和工具调用
+            if isinstance(latest_message, AIMessage) and not latest_message.tool_calls:
+                if latest_message.content:
+                    yield latest_message.content.strip() + "\n"
 
 
 if __name__ == '__main__':
