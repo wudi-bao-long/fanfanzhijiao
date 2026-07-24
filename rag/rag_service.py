@@ -21,8 +21,7 @@ print_runnable = RunnableLambda(print_prompt)
 
 
 class RagSummarizeService(object):
-    # ChromaDB 余弦距离阈值：距离越小越相关，>1.0 基本不相关
-    SCORE_THRESHOLD = 1.0
+    SCORE_THRESHOLD = 1.25
 
     def __init__(self):
         self.vector_store = VectorStoreService()
@@ -38,9 +37,7 @@ class RagSummarizeService(object):
         return chain
 
     def retriever_docs(self, query: str) -> list[Document]:
-        # 用带分数的检索，过滤低相关度结果
-        docs_with_scores =self.vector_store.vector_store.similarity_search_with_score(
-            query, k=chroma_conf["k"]
+        docs_with_scores =self.vector_store.vector_store.similarity_search_with_score(query, k=chroma_conf["k"]
         )
         filtered = []
         for doc, score in docs_with_scores:
@@ -52,15 +49,18 @@ class RagSummarizeService(object):
         context_docs = self.retriever_docs(query)
 
         if not context_docs:
-            return"抱歉，知识库中暂未收录符合条件的餐厅或菜品，建议换个口味或关键词试试~"
+            return self._not_found_msg()
 
-        context = ""
-        counter = 0
-        for doc in context_docs:
-            counter += 1
-            context += f"【参考资料{counter}】：参考资料：{doc.page_content} |参考元数据：{doc.metadata}\n"
+        result_parts = []
+        for i, doc in enumerate(context_docs, 1):
+            result_parts.append(f"【结果{i}】{doc.page_content}")
 
-        return self.chain.invoke({"input": query, "context": context,})
+        result = "\n\n".join(result_parts)
+        result += f"\n\n---\n以上是知识库检索到的全部{len(context_docs)}家餐厅，每一条数据都是真实存在的。你必须基于以上数据推荐，有多少家就如实推荐多少家，严禁编造任何不在此列表中的餐厅。"
+        return result
+
+    def _not_found_msg(self):
+        return ("【系统强制约束】知识库中未收录符合该条件的餐厅。""你必须回复用户：""目前知识库还没有这个口味的餐厅，可以换个菜系试试，比如粤菜、川菜、小吃、奶茶。""严禁编造任何不存在的餐厅名或菜名。")
 
 
 if __name__ == '__main__':

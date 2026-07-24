@@ -147,15 +147,40 @@ if prompt:
 
     response_messages = []
     with st.spinner("🔍 饭饭之交帮你找好吃的..."):
-        res_stream = st.session_state["agent"].execute_stream(prompt)
+        res_stream = st.session_state["agent"].execute_stream(prompt,
+st.session_state["message"])
 
         def capture(generator, cache_list):
             for chunk in generator:
                 cache_list.append(chunk)
                 yield chunk
 
+    # 获取天气（代码硬控，不依赖Agent）
+    from agent.tools.agent_tools import get_weather
+    weather_info = get_weather.invoke("Zhanjiang")
+
+    # 根据天气生成建议
+    if "雨" in weather_info:
+        weather_tip = "🌧️ 今天有雨，建议就近用餐或点外卖哦~"
+    elif "晴" in weather_info:
+        try:
+            temp_str = weather_info.split("气温")[1].split("°C")[0]
+            temp = float(temp_str)
+            if temp > 32:
+                weather_tip = f"☀️ 今天{temp}°C挺热的，建议就近，注意防暑~"
+            else:
+                weather_tip = f"☀️ 天气不错，气温{temp}°C，适合走远一点探店！"
+        except:
+            weather_tip = "今天天气不错，适合去远一点的地方探索美食~"
+    else:
+        weather_tip = "天气多变，建议就近用餐~"
+
+    weather_msg = f"\n\n---\n🌤️ {weather_info}\n\n{weather_tip}"
+
     with st.chat_message("assistant"):
         full_response = st.write_stream(capture(res_stream, response_messages))
+        st.write(weather_msg)
+
     st.session_state["message"].append({"role": "assistant", "content":
-response_messages[-1]})
+response_messages[-1] + weather_msg})
     st.rerun()
