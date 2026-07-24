@@ -90,6 +90,7 @@ st.markdown("""
         border: 1px solid #ffe0cc;
         border-radius: 18px 18px 18px 4px;
         padding: 0.8rem 1.2rem;
+        color: #333;
     }
 
     /* 分割线 */
