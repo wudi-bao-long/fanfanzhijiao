@@ -92,12 +92,16 @@ st.markdown("""
         padding: 0.8rem 1.2rem;
         color: #333;
     }
-
+    
     /* 分割线 */
     hr {
         border: none;
         height: 2px;
         background: linear-gradient(90deg, transparent, #ffe0cc, transparent);
+    }
+    /* 兜底：所有聊天消息强制黑字 */
+    [data-testid="stChatMessage"] {
+        color: #333 !important;
     }
 </style>
 """, unsafe_allow_html=True)
